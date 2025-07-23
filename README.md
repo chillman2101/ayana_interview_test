@@ -1,3 +1,14 @@
+## Developer Note
+- Saya menggunakan Rspec untuk kebutuhan unit test
+- Saya menggunakan cache built-in rails untuk kebutuhan caching
+
+
+
+
+
+
+
+
 # Take Home Test
 
 ## Goals
