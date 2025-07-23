@@ -5,11 +5,15 @@ module Api
 
       # GET /api/v1/jobs
       def index
-        if params[:user_id]
-          @jobs = Job.where(user_id: params[:user_id])
-        else
-          @jobs = Job.all
+        key =  params[:user_id] ? "user:#{params[:user_id]}:jobs" : "jobs:all"
+        @jobs = CacheService.fetch_cache(key) do 
+            jobs = if params[:user_id]
+              Job.where(user_id: params[:user_id]).includes(:user).to_a
+            else
+              Job.all.includes(:user).to_a
+            end
         end
+
         render json: @jobs
       end
 
@@ -22,7 +26,7 @@ module Api
       def create
         @job = Job.new(job_params)
 
-        if @job.save
+        if @job.save           
           render json: @job, status: :created
         else
           render json: { errors: @job.errors.full_messages }, status: :unprocessable_entity
@@ -31,7 +35,7 @@ module Api
 
       # PATCH/PUT /api/v1/jobs/1
       def update
-        if @job.update(job_params)
+        if @job.update(job_params)          
           render json: @job
         else
           render json: { errors: @job.errors.full_messages }, status: :unprocessable_entity
@@ -39,7 +43,7 @@ module Api
       end
 
       # DELETE /api/v1/jobs/1
-      def destroy
+      def destroy        
         @job.destroy
         head :no_content
       end
@@ -47,11 +51,21 @@ module Api
       private
 
       def set_job
-        @job = Job.find(params[:id])
+        key = "user:#{params[:id]}:jobs"         
+        @job = CacheService.fetch_cache(key) do 
+          job = Job.includes(:user).find(params[:id])
+        end
       end
 
       def job_params
         params.require(:job).permit(:title, :description, :status, :user_id)
+      end
+
+      def invalidate_cache_jobs
+        return unless @job #return if @job is nil
+        # destroy cache if exist
+        CacheService.invalidate("jobs:all")
+        CacheService.invalidate("user:#{@job.user_id}:jobs")
       end
     end
   end

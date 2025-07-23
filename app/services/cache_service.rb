@@ -1,6 +1,6 @@
 class CacheService
   class << self
-    def fetch(key, expires_in: 10.minutes)
+    def fetch_cache(key, expires_in: 5.minutes)
       Rails.cache.fetch(key, expires_in: expires_in) do
         yield if block_given?
       end

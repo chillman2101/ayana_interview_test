@@ -43,7 +43,7 @@ RSpec.describe "Users", type: :request do
     end
    end
 
-   describe "PUT/PATCH /users" do
+   describe "PUT/PATCH /users/:id" do
     it "update a user" do
       user = User.create!(name: "Chillman", email: "chillman@example.com", phone: "089609742223")
       user_params = {
@@ -61,6 +61,21 @@ RSpec.describe "Users", type: :request do
 
     it "fails to update if id not found" do
       post "/api/v1/users/999", params: { user: { name: "Chillman 2", email: "chillman@example.com", phone: "089609742223" } }
+      expect(response).to have_http_status(:not_found)
+    end
+
+   end
+
+   describe "DELETE /users/:id" do
+    it "delete a user" do
+      user = User.create!(name: "Chillman", email: "chillman@example.com", phone: "089609742223")     
+
+      delete "/api/v1/users/#{user.id}"
+      expect(response).to have_http_status(:no_content)
+    end
+
+    it "fails to delete if id not found" do
+      delete "/api/v1/users/999"
       expect(response).to have_http_status(:not_found)
     end
 
